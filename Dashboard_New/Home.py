@@ -6,8 +6,6 @@ from streamlit_option_menu import option_menu
 # Load data from PostgreSQL
 conn = st.connection("telecom_db")
 df = conn.query("SELECT * FROM xdr_data")
-
-
 #sidebar of the streamlit
 with st.sidebar:
     selected=option_menu(
@@ -55,7 +53,37 @@ elif selected=="User overview analysis":
     st.subheader("Number of xDR Sessions")
     num_sessions = df.shape[0]  # Count the number of rows
     st.write(f"Total xDR Sessions: {num_sessions}")
-    
+    # ---- Calculate Total Download (DL) and Upload (UL) Data ----
+    st.subheader("Total Download (DL) and Upload (UL) Data")
+    total_dl = df['Total DL (Bytes)'].sum()
+    total_ul = df['Total UL (Bytes)'].sum()
+    total_dl_mb = total_dl / (1024 * 1024)  # Convert to MB
+    total_ul_mb = total_ul / (1024 * 1024)  # Convert to MB
+    st.write(f"Total Download Data: {total_dl_mb:.2f} MB")
+    st.write(f"Total Upload Data: {total_ul_mb:.2f} MB")
+
+    # Convert session duration to numeric 
+    df['session_duration'] = (pd.to_datetime(df['end']) - pd.to_datetime(df['start'])).dt.total_seconds() / 6
+    mean_duration = df['session_duration'].mean()
+    median_duration = df['session_duration'].median()
+    std_dev_duration = df['session_duration'].std()
+    min_duration = df['session_duration'].min()
+    max_duration = df['session_duration'].max()
+    q25_duration = df['session_duration'].quantile(0.25)
+    q75_duration = df['session_duration'].quantile(0.75)
+    iqr_duration = q75_duration - q25_duration
+
+
+    # Display metrics
+    st.subheader("Session Duration Metrics")
+    st.write(f"Mean Duration: {mean_duration:.2f} minutes")
+    st.write(f"Median Duration: {median_duration:.2f} minutes")
+    st.write(f"Standard Deviation: {std_dev_duration:.2f} minutes")
+    st.write(f"Minimum Duration: {min_duration:.2f} minutes")
+    st.write(f"Maximum Duration: {max_duration:.2f} minutes")
+    st.write(f"25th Percentile: {q25_duration:.2f} minutes")
+    st.write(f"75th Percentile: {q75_duration:.2f} minutes")
+    st.write(f"Interquartile Range (IQR): {iqr_duration:.2f} minutes")
 elif selected=="User engagement analysis":
     st.title("The User engagement analysis Working Area")
 elif selected=="User Experience Analysis":
